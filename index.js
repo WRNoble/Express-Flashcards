@@ -9,37 +9,37 @@ app.use(cookieParser());
 
 app.set('view engine', 'pug');//tells Express where to look and to use pug
 
-app.get('/', (request, response) => {
-    const name = request.cookies.username
-    if (name) {
-        response.render('index', { name }); //establish home
-    } else {
-        response.redirect('/hello');
-    }  
+
+const mainRoutes = require('./routes/routes');
+const cardRoutes = require('./routes/cards');
+
+app.use(mainRoutes);
+app.use('/cards', cardRoutes);
+
+app.use((req, res, next) => {
+    console.log("hello");
+    // const err = new Error('Oh no!');
+    // err.status = 500;
+    next();
 });
 
-app.get('/cards', (request, response) => {
-    response.render('card', { prompt: "Who dies in 323?" }); //establish a second page and passes in a prompt 
+app.use((req, res, next) => {
+    console.log("World");
+    next();
 });
 
-app.get('/hello', (request, response) => {
-    const name = request.cookies.username;
-    if (name) {
-        response.redirect('/')
-    } else {
-        response.render('hello');  
-    }
+app.use((request, response, next) => {
+    const err = new Error('Not Found');
+    err.status = 404;
+    next(err);
 });
 
-app.post('/hello', (request, response) => {
-    response.cookie('username', request.body.username);
-    response.redirect('/');  
+app.use((err, request, response, next) => {
+    response.locals.error = err;
+    response.status(err.status);
+    response.render('error', err);
+    next();
 });
-
-app.post('/goodbye', (request, response) => {
-    response.clearCookie('username');
-    response.redirect('/hello');
-})
 
 app.listen(3000, () => {
     console.log("running!");
